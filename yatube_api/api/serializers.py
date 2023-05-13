@@ -1,12 +1,14 @@
 from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
 
 from posts.models import Comment, Post, Group, Follow, User
 
 
 class PostSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(slug_field='username', read_only=True)
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
 
     class Meta:
         model = Post
@@ -43,14 +45,6 @@ class FollowSerializer(serializers.ModelSerializer):
         required=True
     )
 
-    def validate(self, data):
-        user = self.context.get('request').user
-        if user == data['following']:
-            raise serializers.ValidationError(
-                'Вы не можете подписаться на самого себя.'
-            )
-        return data
-
     class Meta:
         model = Follow
         fields = ('user', 'following')
@@ -61,3 +55,11 @@ class FollowSerializer(serializers.ModelSerializer):
                 message='Вы уже подписаны на этого автора.',
             )
         ]
+
+    def validate(self, data):
+        user = self.context.get('request').user
+        if user == data['following']:
+            raise serializers.ValidationError(
+                'Вы не можете подписаться на самого себя.'
+            )
+        return data
